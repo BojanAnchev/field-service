@@ -67,7 +67,7 @@ class FSMRecurringOrder(models.Model):
         help="This is the order template that will be recurring",
     )
     company_id = fields.Many2one(
-        "res.company", "Company", default=lambda self: self.env.user.company_id
+        "res.company", "Company", default=lambda self: self.env.company
     )
     fsm_order_ids = fields.One2many(
         "fsm.order", "fsm_recurring_id", string="Orders", copy=False
@@ -173,7 +173,7 @@ class FSMRecurringOrder(models.Model):
             thru_date = request_thru_date
         # use variables to calulate and return the rruleset object
         ruleset = self.fsm_frequency_set_id._get_rruleset(
-            dtstart=next_date, until=thru_date
+            dtstart=next_date, until=thru_date, tz=self.location_id.tz
         )
         return ruleset
 
@@ -272,7 +272,7 @@ class FSMRecurringOrder(models.Model):
             if rec.max_orders > 0:
                 orders_in_30 = rec.fsm_order_count
                 orders_in_30 += rec.fsm_frequency_set_id._get_rruleset(
-                    until=expire_date
+                    until=expire_date, tz=rec.location_id.tz
                 ).count()
                 if orders_in_30 >= rec.max_orders:
                     to_renew += rec
